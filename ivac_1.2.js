@@ -31,10 +31,10 @@
     retryAttempts = 0;
   }
 
-  const webfileId = "BGDKV0286625";
-  const name = "NAZMUL";
-  const email = "NAZMUL7878@GMAIL.COM";
-  const phoneNumber = "01976313271";
+  const webfileId = "BGDRV1E6A725";
+  const name = "MD RASHEDUL ISLAM";
+  const email = "parosh.cse@gmail.com";
+  const phoneNumber = "01766283131";
 
   const webfileId_1 = "BGDDV175B225";
   const webfileId_1_name = "IFFAT HASAN";
@@ -56,13 +56,13 @@
   const payNowUrl = "https://payment.ivacbd.com/paynow";
   const APPINFO_PAYLOAD = {
     _token: csrfToken,
-    highcom: "5",
+    highcom: "3",
     webfile_id: webfileId,
     webfile_id_repeat: webfileId,
-    ivac_id: "3",
-    visa_type: "13",
+    ivac_id: "2",
+    visa_type: "2",
     family_count: "0",
-    visit_purpose: "For a full medical checkup",
+    visit_purpose: "For higher study",
   };
   const PERINFO_PAYLOAD = {
     _token: csrfToken,
