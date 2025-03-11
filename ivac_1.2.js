@@ -31,15 +31,70 @@
     retryAttempts = 0;
   }
 
-  const webfileId = "BGDRV1E6A725";
-  const name = "MD RASHEDUL ISLAM";
-  const email = "parosh.cse@gmail.com";
-  const phoneNumber = "01766283131";
+  function concurrentStep(
+    ajaxFunc,
+    isSuccess,
+    onSuccess,
+    isRestart,
+    onRestart,
+    onRetry
+  ) {
+    let requests = [];
+    let completed = false;
+    let finishedCount = 0;
 
-  const webfileId_1 = "BGDDV175B225";
-  const webfileId_1_name = "IFFAT HASAN";
-  const webfileId_2 = "BGDDV1756825";
-  const webfileId_2_name = "NUSRAT HASAN JANNAT";
+    function abortAll() {
+      requests.forEach(function (req) {
+        if (req && req.abort) {
+          req.abort();
+        }
+      });
+      requests = [];
+    }
+
+    function handleFailure() {
+      finishedCount++;
+      if (finishedCount >= 100 && !completed) {
+        onRetry();
+      }
+    }
+
+    for (let i = 0; i < 100; i++) {
+      let req = ajaxFunc();
+      requests.push(req);
+      req
+        .done(function (response) {
+          if (completed) return;
+          // If a restart condition exists and is met, abort and restart the step.
+          if (typeof isRestart === "function" && isRestart(response)) {
+            completed = true;
+            abortAll();
+            onRestart(response);
+          }
+          // Otherwise, if the response meets our success criteria, use it.
+          else if (isSuccess(response)) {
+            completed = true;
+            abortAll();
+            onSuccess(response);
+          } else {
+            handleFailure();
+          }
+        })
+        .fail(function (err) {
+          handleFailure();
+        });
+    }
+  }
+
+  const webfileId = "BGDDV203FE25";
+  const name = "MD RUBEL";
+  const email = "INSPECTIONBD202022@GMAIL.COM";
+  const phoneNumber = "01731186842";
+
+  const webfileId_1 = "BGDDV1EAEC25";
+  const webfileId_1_name = "ASHA RANI DUTTA";
+  const webfileId_2 = "BGDDV1E74B25";
+  const webfileId_2_name = "ANUSREE DUTTA";
 
   const selectedPayment = {
     name: "VISA",
@@ -62,7 +117,7 @@
     ivac_id: "17",
     visa_type: "13",
     family_count: "0",
-    visit_purpose: "For higher study",
+    visit_purpose: "For a full medical checkup",
   };
   const PERINFO_PAYLOAD = {
     _token: csrfToken,
@@ -81,145 +136,169 @@
     _token: csrfToken,
   };
 
+  // STEP 1: Pre-step test.
   function testPreStep() {
     console.log("Performing pre-step test on:", preTestUrl);
-    $.ajax({
-      url: preTestUrl,
-      method: "GET",
-      timeout: AJAX_TIMEOUT,
-      success: function (response) {
+    concurrentStep(
+      function () {
+        return $.ajax({
+          url: preTestUrl,
+          method: "GET",
+          timeout: AJAX_TIMEOUT,
+        });
+      },
+      function (response) {
+        return response.indexOf("highcom") > -1;
+      },
+      function (response) {
         resetRetries();
-        if (response.indexOf("highcom") > -1) {
-          console.log(
-            "Pre-step success: 'highcom' found. Proceeding to AppInfo."
-          );
-          randomDelay(submitAppInfo);
-        } else {
-          console.log("'highcom' not found. Retrying pre-step...");
-          retryAttempts++;
-          setTimeout(testPreStep, getRetryDelay());
-        }
-      },
-      error: function (xhr) {
-        retryAttempts++;
-        console.error(
-          "Error during pre-step test. Retrying...",
-          xhr.responseText || xhr.statusText
+        console.log(
+          "Pre-step success: 'highcom' found. Proceeding to AppInfo."
         );
-        setTimeout(testPreStep, getRetryDelay());
+        randomDelay(submitAppInfo);
       },
-    });
+      // No restart condition for pre-step.
+      function (response) {
+        return false;
+      },
+      function (response) {},
+      function () {
+        retryAttempts++;
+        console.log("All pre-step attempts failed. Retrying pre-step...");
+        setTimeout(testPreStep, getRetryDelay());
+      }
+    );
   }
 
+  // STEP 2: Submit AppInfo.
   function submitAppInfo() {
     console.log("Submitting Application Info...");
-    $.ajax({
-      url: appInfoUrl,
-      method: "POST",
-      data: APPINFO_PAYLOAD,
-      timeout: AJAX_TIMEOUT,
-      success: function (response) {
+    concurrentStep(
+      function () {
+        return $.ajax({
+          url: appInfoUrl,
+          method: "POST",
+          data: APPINFO_PAYLOAD,
+          timeout: AJAX_TIMEOUT,
+        });
+      },
+      function (response) {
+        return response.indexOf("PersonalForm") > -1;
+      },
+      function (response) {
         resetRetries();
-        console.log("AppInfo response received.");
-        if (response.indexOf("PersonalForm") > -1) {
-          console.log("Detected 'PersonalForm'. Proceeding to Personal Info.");
-          randomDelay(submitPerInfo);
-        } else {
-          console.log("'PersonalForm' not detected. Retrying AppInfo...");
-          retryAttempts++;
-          setTimeout(submitAppInfo, getRetryDelay());
-        }
-      },
-      error: function (xhr) {
-        retryAttempts++;
-        console.error(
-          "Error submitting AppInfo. Retrying...",
-          xhr.responseText || xhr.statusText
+        console.log(
+          "AppInfo response received. Detected 'PersonalForm'. Proceeding to Personal Info."
         );
-        setTimeout(submitAppInfo, getRetryDelay());
+        randomDelay(submitPerInfo);
       },
-    });
+      // No restart condition for AppInfo.
+      function (response) {
+        return false;
+      },
+      function (response) {},
+      function () {
+        retryAttempts++;
+        console.log("All AppInfo attempts failed. Retrying AppInfo...");
+        setTimeout(submitAppInfo, getRetryDelay());
+      }
+    );
   }
 
+  // STEP 3: Submit Personal Info.
   function submitPerInfo() {
     console.log("Submitting Personal Info...");
-    $.ajax({
-      url: perInfoUrl,
-      method: "POST",
-      data: PERINFO_PAYLOAD,
-      timeout: AJAX_TIMEOUT,
-      success: function (response) {
-        resetRetries();
-        console.log("Personal Info response received.");
-        // Check if the response has "highcom". If so, restart from AppInfo.
-        if (response.indexOf("highcom") > -1) {
-          console.log("Highcom detected. Restarting from AppInfo step.");
-          randomDelay(submitAppInfo);
-        }
-        // Otherwise, check if the expected webfileId is present.
-        else if (response.indexOf(webfileId) > -1) {
-          console.log(
-            `Detected webfile ID '${webfileId}' in Personal Info. Proceeding to Overview.`
-          );
-          randomDelay(submitOverview);
-        } else {
-          console.log(
-            `Webfile ID '${webfileId}' not found. Retrying Personal Info...`
-          );
-          retryAttempts++;
-          setTimeout(submitPerInfo, getRetryDelay());
-        }
+    concurrentStep(
+      function () {
+        return $.ajax({
+          url: perInfoUrl,
+          method: "POST",
+          data: PERINFO_PAYLOAD,
+          timeout: AJAX_TIMEOUT,
+        });
       },
-      error: function (xhr) {
+      function (response) {
+        // Valid if the response contains the webfile ID and does not include "highcom".
+        return (
+          response.indexOf(webfileId) > -1 && response.indexOf("highcom") === -1
+        );
+      },
+      function (response) {
+        resetRetries();
+        console.log(
+          `Detected webfile ID '${webfileId}' in Personal Info. Proceeding to Overview.`
+        );
+        randomDelay(submitOverview);
+      },
+      // If "highcom" is detected, we want to restart from AppInfo.
+      function (response) {
+        return response.indexOf("highcom") > -1;
+      },
+      function (response) {
+        console.log(
+          "Highcom detected in Personal Info. Restarting from AppInfo step."
+        );
+        randomDelay(submitAppInfo);
+      },
+      function () {
         retryAttempts++;
-        console.error(
-          "Error submitting Personal Info. Retrying...",
-          xhr.responseText || xhr.statusText
+        console.log(
+          "All Personal Info attempts failed. Retrying Personal Info..."
         );
         setTimeout(submitPerInfo, getRetryDelay());
-      },
-    });
+      }
+    );
   }
 
+  // STEP 4: Submit Overview.
   function submitOverview() {
     console.log("Submitting Overview...");
-    $.ajax({
-      url: overviewUrl,
-      method: "POST",
-      data: OVERVIEW_PAYLOAD,
-      timeout: AJAX_TIMEOUT,
-      success: function (response) {
+    concurrentStep(
+      function () {
+        return $.ajax({
+          url: overviewUrl,
+          method: "POST",
+          data: OVERVIEW_PAYLOAD,
+          timeout: AJAX_TIMEOUT,
+        });
+      },
+      function (response) {
+        // If no "highcom" is present, treat as success.
+        return response.indexOf("highcom") === -1;
+      },
+      function (response) {
         resetRetries();
         console.log("Overview response received.");
-        // If "highcom" is detected, restart from AppInfo.
-        if (response.indexOf("highcom") > -1) {
-          console.log("Highcom detected. Starting from AppInfo step.");
-          randomDelay(submitAppInfo);
+        if (response.indexOf("payment-option") > -1) {
+          console.log(
+            "Detected 'payment-option'. Proceeding to Payment steps."
+          );
         } else {
-          // Whether or not "payment-option" is detected, proceed to the next step.
-          if (response.indexOf("payment-option") > -1) {
-            console.log(
-              "Detected 'payment-option'. Proceeding to Payment steps."
-            );
-          } else {
-            console.log(
-              "Payment-option not detected, but successful response received. Proceeding to Payment steps."
-            );
-          }
-          randomDelay(sendOtp);
+          console.log(
+            "Payment-option not detected, but successful response received. Proceeding to Payment steps."
+          );
         }
+        randomDelay(sendOtp);
       },
-      error: function (xhr) {
-        retryAttempts++;
-        console.error(
-          "Error submitting Overview. Retrying...",
-          xhr.responseText || xhr.statusText
+      // If "highcom" is detected, restart from AppInfo.
+      function (response) {
+        return response.indexOf("highcom") > -1;
+      },
+      function (response) {
+        console.log(
+          "Highcom detected in Overview. Starting from AppInfo step."
         );
-        setTimeout(submitOverview, getRetryDelay());
+        randomDelay(submitAppInfo);
       },
-    });
+      function () {
+        retryAttempts++;
+        console.log("All Overview attempts failed. Retrying Overview...");
+        setTimeout(submitOverview, getRetryDelay());
+      }
+    );
   }
 
+  // The following functions remain unchanged.
   function sendOtp() {
     console.log("Sending OTP...");
     const SENDOTP_PAYLOAD = {
