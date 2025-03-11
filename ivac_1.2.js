@@ -56,11 +56,11 @@
   const payNowUrl = "https://payment.ivacbd.com/paynow";
   const APPINFO_PAYLOAD = {
     _token: csrfToken,
-    highcom: "3",
+    highcom: "1",
     webfile_id: webfileId,
     webfile_id_repeat: webfileId,
-    ivac_id: "2",
-    visa_type: "2",
+    ivac_id: "17",
+    visa_type: "13",
     family_count: "0",
     visit_purpose: "For higher study",
   };
