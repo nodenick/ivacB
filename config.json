@@ -1,0 +1,33 @@
+{
+    "anticaptcha_key": "b2d948fa28e6e7b6b3a7db19b6fc1708",
+    "headless": false,
+    "cf_timeout": 120,
+    "booking_start_time": "16:00:00",
+    "login_preparation_time": "15:30:00",
+    "max_retries": 20,
+    "retry_delay": 3,
+    "users": [
+        {
+            "phone": "01811100656",
+            "password": "R12345",
+            "webfile_id": "BGDDV1CCB425",
+            "full_name": "Applicant Name",
+            "email": "onirudda.islam@gmail.com",
+            "visa_type": "2",
+            "highcom": "3",
+            "ivac_id": "2",
+            "family_count": "0",
+            "visit_purpose": "For education purpose",
+
+            "payment_method": "visacard",
+            "proxy_index": 0,
+            "use_proxies": true,
+            "webfileId_1": "BGDDV1EAEC25",
+            "webfileId_1_name":"ASHA RANI DUTTA",
+            "webfileId_2" : "BGDDV1E74B25",
+            "webfileId_2_name":"ANUSREE DUTTA"
+
+        }
+    ],
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+}
